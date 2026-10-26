@@ -1,0 +1,32 @@
+# این فایل Weaviate را با ماژول بومی text2vec-ollama بالا می‌آورد.
+# دیگر نیازی به سرور Flask جداگانه (flask_app.py) نیست، چون Weaviate
+# مستقیماً با Ollama روی سیستم شما صحبت می‌کند.
+#
+# پیش‌نیاز: Ollama باید از قبل نصب و در حال اجرا باشد (ollama serve)
+# و مدل‌های لازم را با این دستورها از قبل دانلود کرده باشید:
+#   ollama pull bge-m3
+#   ollama pull gemma3:4b
+#
+# اجرا: docker compose up -d
+
+services:
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.38.6
+    ports:
+      - 8080:8080
+      - 50051:50051
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      ENABLE_MODULES: 'text2vec-ollama,generative-ollama,text2vec-openai,generative-openai'
+      # host.docker.internal یک آدرس ویژه‌ی Docker Desktop است که از داخل
+      # کانتینر به خود ویندوز/مک میزبان اشاره می‌کند (چون Ollama روی خود
+      # ویندوز، بیرون از کانتینر، در حال اجراست)
+      OLLAMA_API_ENDPOINT: 'http://host.docker.internal:11434'
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: on-failure:0
+volumes:
+  weaviate_data:
